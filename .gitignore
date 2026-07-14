@@ -1,0 +1,7 @@
+# Build output
+*.o
+WhatsAppSort.app/
+build/
+
+# macOS
+.DS_Store
