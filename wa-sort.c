@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include <dirent.h>
 #include <sys/stat.h>
 #include <time.h>
@@ -44,16 +45,20 @@ int main(void) {
         char from[2200], to[2400];
         snprintf(from, sizeof(from), "%s/%s", src, e->d_name);
 
+        // lstat (not stat): only move genuine regular files, never follow a symlink.
         struct stat st;
-        if (stat(from, &st) != 0 || !S_ISREG(st.st_mode)) continue;  // regular files only
+        if (lstat(from, &st) != 0 || !S_ISREG(st.st_mode)) continue;
 
+        // Move without ever overwriting an existing file: RENAME_EXCL fails with
+        // EEXIST if the target exists, so on a name clash we try numbered suffixes.
         snprintf(to, sizeof(to), "%s/%s", dest, e->d_name);
-        struct stat st2;
-        if (stat(to, &st2) == 0) {  // name already taken: add a timestamp so nothing is overwritten
-            snprintf(to, sizeof(to), "%s/%ld_%s", dest, (long)time(NULL), e->d_name);
+        int moved = (renamex_np(from, to, RENAME_EXCL) == 0);
+        for (int n = 1; !moved && errno == EEXIST && n <= 9999; n++) {
+            snprintf(to, sizeof(to), "%s/%d_%s", dest, n, e->d_name);
+            moved = (renamex_np(from, to, RENAME_EXCL) == 0);
         }
 
-        if (rename(from, to) == 0 && lf) {
+        if (moved && lf) {
             time_t now = time(NULL);
             char ts[32];
             strftime(ts, sizeof(ts), "%Y-%m-%d %H:%M:%S", localtime(&now));

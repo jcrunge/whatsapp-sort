@@ -61,7 +61,7 @@ Pieces installed:
 ## Install
 
 ```bash
-git clone https://github.com/<you>/whatsapp-sort.git
+git clone https://github.com/jcrunge/whatsapp-sort.git
 cd whatsapp-sort
 ./install.sh
 ```
@@ -92,7 +92,7 @@ the Full Disk Access list afterward.)
   about which chat it came from.
 - For the same reason it **cannot sort by chat**. Everything lands in `_Inbox`;
   organize into per-chat subfolders yourself.
-- macOS / Apple Silicon only (uses `launchd` + `clang`).
+- macOS only (uses `launchd` + `clang`; builds on both Apple Silicon and Intel).
 
 ## License
 
