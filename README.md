@@ -56,7 +56,15 @@ Pieces installed:
 | `~/Applications/WhatsAppSort.app` | the binary (needs Full Disk Access) |
 | `~/Library/LaunchAgents/com.github.whatsapp-sort.plist` | watches `~/Downloads`, starts at login |
 | `~/Documents/WhatsApp/_Inbox/` | destination |
-| `~/Documents/WhatsApp/.wa-sort.log` | move log |
+| `~/Documents/WhatsApp/.wa-sort.log` | move log (written by the binary) |
+| `~/Library/Logs/whatsapp-sort.err` | agent stderr (written by launchd) |
+
+Those last two are split on purpose. The move log lives next to your files
+because the binary opens it, using its own Full Disk Access grant. The stderr
+file cannot live there: launchd opens it *before* exec'ing the binary, so that
+open is attributed to launchd, which has no such grant. Point `StandardErrorPath`
+at a TCC-protected folder and launchd fails the spawn with `EX_CONFIG` (78) —
+the binary never runs, and nothing is logged to explain why.
 
 ## Install
 

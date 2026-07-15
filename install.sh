@@ -17,7 +17,7 @@ echo "==> Signing (ad-hoc, so TCC has a stable identity)"
 codesign --force --deep -s - "$APP"
 
 echo "==> Writing the LaunchAgent -> $AGENT"
-mkdir -p "$HOME/Library/LaunchAgents"
+mkdir -p "$HOME/Library/LaunchAgents" "$HOME/Library/Logs"
 cat > "$AGENT" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -35,8 +35,12 @@ cat > "$AGENT" <<PLIST
     </array>
     <key>RunAtLoad</key>
     <true/>
+    <!-- Must NOT live under ~/Documents: launchd opens this file itself, before
+         exec'ing us, so the open is attributed to launchd rather than to this
+         app's Full Disk Access grant. A TCC-protected path fails the spawn with
+         EX_CONFIG (78) and the binary never runs. ~/Library/Logs is unprotected. -->
     <key>StandardErrorPath</key>
-    <string>${HOME}/Documents/WhatsApp/.wa-sort.err</string>
+    <string>${HOME}/Library/Logs/whatsapp-sort.err</string>
 </dict>
 </plist>
 PLIST
